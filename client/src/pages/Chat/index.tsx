@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Phone, PhoneOff, Send, Mic, MicOff } from "lucide-react";
 import {useChat , Message} from '@ai-sdk/react'
 import { CallStatus } from "./types";
+import ReactMarkdown from "react-markdown";
+import AudioCallComponent from "./call";
+
 
 export default function Chat() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -59,77 +62,37 @@ export default function Chat() {
               <p className="text-sm text-gray-500">AI Assistant</p>
             </div>
           </div>
-
-          <div className="flex items-center space-x-2">
-            {callStatus !== "idle" && (
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                className={`p-2 rounded-full ${
-                  isMuted
-                    ? "bg-red-100 text-red-600"
-                    : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
-              </button>
-            )}
-            <button
-              onClick={handleCallToggle}
-              className={`p-2 rounded-full ${
-                callStatus !== "idle"
-                  ? "bg-red-500 text-white"
-                  : "bg-blue-500 text-white"
-              }`}
-            >
-              {callStatus !== "idle" ? (
-                <PhoneOff size={20} />
-              ) : (
-                <Phone size={20} />
-              )}
-            </button>
-          </div>
+          <AudioCallComponent
+      callStatus={callStatus}
+      onCallStart={() => setCallStatus("ongoing")}
+      onCallEnd={() => setCallStatus("ended")}
+    />
         </div>
       </div>
 
-      {/* Call status */}
-      {callStatus !== "idle" && (
-        <div className="py-2 bg-blue-50">
-          <div className="px-4 mx-auto">
-            <p className="text-sm text-blue-600">
-              {callStatus === "connecting"
-                ? "Connecting..."
-                : callStatus === "ongoing"
-                ? "On call with Barack Obama"
-                : "Call ended"}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Chat area */}
       <div className="flex-1 px-4 py-6 overflow-y-auto" ref={containerRef}>
         <div className="space-y-4 ">
-          {messages.map((message: Message, index : number) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                  message.role === "user"
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-900"
-                } shadow-sm`}
-              >
-                <p>{message.content}</p>
-                <p className="mt-1 text-xs opacity-75">
-                  {new Date().toLocaleTimeString()}
-                </p>
-              </div>
-            </div>
-          ))}
+        {messages.map((message: Message, index: number) => (
+  <div
+    key={message.id}
+    className={`flex ${
+      message.role === "user" ? "justify-end" : "justify-start"
+    }`}
+  >
+    <div
+      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+        message.role === "user"
+          ? "bg-blue-500 text-white"
+          : "bg-white text-gray-900"
+      } shadow-sm`}
+    >
+      <ReactMarkdown>{message.content}</ReactMarkdown>
+      <p className="mt-1 text-xs opacity-75">
+        {new Date().toLocaleTimeString()}
+      </p>
+    </div>
+  </div>
+))}
           {isLoading && (
             <div className="flex justify-start">
               <div className="px-4 py-2 bg-white rounded-lg shadow-sm">
