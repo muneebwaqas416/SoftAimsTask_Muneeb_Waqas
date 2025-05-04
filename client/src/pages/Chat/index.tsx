@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Phone, PhoneOff, Send, Mic, MicOff } from "lucide-react";
+import {  Send } from "lucide-react";
 import {useChat , Message} from '@ai-sdk/react'
 import { CallStatus } from "./types";
 import ReactMarkdown from "react-markdown";
@@ -9,7 +9,6 @@ import AudioCallComponent from "./call";
 export default function Chat() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [callStatus, setCallStatus] = useState<CallStatus>("idle");
-  const [isMuted, setIsMuted] = useState(false);
 
   const {
     messages,
@@ -32,19 +31,8 @@ export default function Chat() {
     }, 100);
   }, [messages, isLoading]);
 
-  const handleCallToggle = () => {
-    if (callStatus === "idle") {
-      setCallStatus("connecting");
-      setTimeout(() => setCallStatus("ongoing"), 1500);
-    } else {
-      setCallStatus("ended");
-      setTimeout(() => setCallStatus("idle"), 1000);
-    }
-  };
-
   return (
     <div className="flex flex-col h-screen bg-gray-100">
-      {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="flex justify-between px-4 py-4">
           <div className="flex items-center space-x-4">
@@ -107,7 +95,6 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Input area */}
       <div className="bg-white border-t">
         <div className="px-4 py-4 mx-auto ">
           <form onSubmit={handleSubmit} className="flex space-x-4">

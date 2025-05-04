@@ -2,7 +2,6 @@ import { Controller,Post, Body, Res, Get } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { AskCloneDto } from './dto/chat.dto';
 import { Response } from 'express';
-import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect, MessageBody, Socket } from '@nestjs/websocket';
 
 
 @Controller('chat')
@@ -16,12 +15,4 @@ export class ChatController {
     return response;
   }
 
-  // Handle incoming audio data from the frontend
-  @OnGatewayConnection()
-  @OnGatewayDisconnect()
-  async handleAudioMessage(@MessageBody() audioData: Buffer, client: Socket): Promise<void> {
-    console.log('Audio data received');
-    // Pass the audio data to the service for processing
-    await this.audioCallService.handleAudioData(client, audioData);
-  }
 }

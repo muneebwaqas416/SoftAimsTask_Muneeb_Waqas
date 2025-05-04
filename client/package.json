@@ -11,12 +11,17 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.10",
+    "@ffmpeg/ffmpeg": "^0.9.3",
     "@radix-ui/react-hover-card": "^1.0.7",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@types/js-cookie": "^3.0.6",
+    "audiobuffer-to-wav": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "extendable-media-recorder": "^9.2.23",
+    "extendable-media-recorder-wav-encoder": "^7.0.127",
+    "ffmpeg": "^0.0.4",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.390.0",
     "react": "^18.2.0",
@@ -27,7 +32,9 @@
     "recorder-js": "^1.0.7",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "wav-blob-util": "^1.0.20",
+    "webm-to-wav-converter": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.2",
