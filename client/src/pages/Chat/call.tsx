@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { AudioCallComponentProps } from "./types";
-import { getWaveBlob } from "webm-to-wav-converter";
 
 const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
   callStatus,
@@ -19,7 +18,6 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
-    // Initialize WebSocket connection
     const socket = io(`${import.meta.env.VITE_NESTJS_BACKEND_URL}audio`, {
       transports: ["websocket"],
       reconnectionAttempts: 5,
@@ -44,18 +42,18 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
     });
 
     socket.on("audio-data", async (data: ArrayBuffer) => {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-      }
-      
       try {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContext();
+        }
+        
         const audioBuffer = await audioContextRef.current.decodeAudioData(data);
         const source = audioContextRef.current.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContextRef.current.destination);
         source.start();
       } catch (err) {
-        console.error("Error decoding audio data:", err);
+        console.error("Error playing audio:", err);
       }
     });
 
@@ -71,15 +69,17 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 16000, // Recommended for speech
-          channelCount: 1    // Mono
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true
         }
       });
       streamRef.current = stream;
       audioContextRef.current = new AudioContext();
   
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
+        mimeType: 'audio/webm;codecs=opus',
         audioBitsPerSecond: 16000
       });
       mediaRecorderRef.current = mediaRecorder;
@@ -87,12 +87,11 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
       mediaRecorder.ondataavailable = async (event) => {
         if (event.data.size > 0 && socketRef.current?.connected) {
           try {
-            const audioBuffer = await getWaveBlob(event.data,false);
-            socketRef.current.emit("audio-message", audioBuffer);
+            // Convert Blob to ArrayBuffer and send
+            const arrayBuffer = await event.data.arrayBuffer();
+            socketRef.current.emit("audio-message", arrayBuffer);
           } catch (error) {
-            console.error("Audio conversion error:", error);
-            console.log(JSON.stringify(error))
-            //playAudioFallback(audioBuffer);
+            console.error("Error sending audio data:", error);
           }
         }
       };
