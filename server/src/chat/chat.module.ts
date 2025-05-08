@@ -2,24 +2,15 @@ import { Module } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
 import { AudioGateway } from './webSocketGateway';
-import OpenAI from 'openai';
-import { ElevenLabsClient, play } from "elevenlabs";
+import { ElevenLabsClient } from "elevenlabs";
+import { ConfigModule } from '@nestjs/config';
+console.log('apiKEY:', process.env.ELEVENLABS_API_KEY)
 
 @Module({
+  imports : [ConfigModule],
   controllers: [ChatController],
   providers: [
-    {
-      provide: OpenAI,
-      useFactory: () => new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      }),
-    },
-    {
-      provide: ElevenLabsClient,
-      useFactory: () => new ElevenLabsClient({
-        apiKey: process.env.ELEVENLABS_API_KEY,
-      }),
-    },
+    ElevenLabsClient,
     ChatService,
     AudioGateway,
   ],

@@ -1,7 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";
 import { io, Socket } from "socket.io-client";
-import { AudioCallComponentProps } from "./types";
+import SpeechRecognition, { 
+  useSpeechRecognition,  
+} from 'react-speech-recognition';
+
+interface AudioCallComponentProps {
+  callStatus?: string;
+  onCallStart?: () => void;
+  onCallEnd?: () => void;
+}
 
 const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
   callStatus,
@@ -11,12 +19,19 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
   const socketRef = useRef<Socket | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // Speech recognition hooks
+  const {
+    transcript,
+    listening: isSpeechRecognitionActive,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    finalTranscript,
+  } = useSpeechRecognition();
 
+  // Initialize socket connection
   useEffect(() => {
     const socket = io(`${import.meta.env.VITE_NESTJS_BACKEND_URL}audio`, {
       transports: ["websocket"],
@@ -41,19 +56,18 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
       setConnectionStatus("error");
     });
 
-    socket.on("audio-data", async (data: ArrayBuffer) => {
+    socket.on("audio-response", async (audioData: ArrayBuffer) => {
       try {
         if (!audioContextRef.current) {
           audioContextRef.current = new AudioContext();
         }
-        
-        const audioBuffer = await audioContextRef.current.decodeAudioData(data);
+        const audioBuffer = await audioContextRef.current.decodeAudioData(audioData);
         const source = audioContextRef.current.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContextRef.current.destination);
         source.start();
       } catch (err) {
-        console.error("Error playing audio:", err);
+        console.error("Error playing audio response:", err);
       }
     });
 
@@ -65,38 +79,26 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
     };
   }, []);
 
+  // Send final transcript to backend when it changes
+  useEffect(() => {
+    if (finalTranscript && socketRef.current?.connected) {
+      socketRef.current.emit("speech-text", {
+        text: finalTranscript,
+        timestamp: Date.now()
+      });
+      resetTranscript(); // Clear for new speech
+    }
+  }, [finalTranscript, resetTranscript]);
+
   const startCall = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true
-        }
+      // Start speech recognition
+      resetTranscript();
+      SpeechRecognition.startListening({ 
+        continuous: true,
+        language: 'en-US'
       });
-      streamRef.current = stream;
-      audioContextRef.current = new AudioContext();
-  
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-        audioBitsPerSecond: 16000
-      });
-      mediaRecorderRef.current = mediaRecorder;
-  
-      mediaRecorder.ondataavailable = async (event) => {
-        if (event.data.size > 0 && socketRef.current?.connected) {
-          try {
-            // Convert Blob to ArrayBuffer and send
-            const arrayBuffer = await event.data.arrayBuffer();
-            socketRef.current.emit("audio-message", arrayBuffer);
-          } catch (error) {
-            console.error("Error sending audio data:", error);
-          }
-        }
-      };
-  
-      mediaRecorder.start(250);
+      
       setIsRecording(true);
       onCallStart?.();
     } catch (error) {
@@ -105,27 +107,37 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
   };
 
   const stopCall = () => {
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
-    }
+    // Stop speech recognition
+    //SpeechRecognition.stopListening();
+    resetTranscript();
     
-    streamRef.current?.getTracks().forEach((track) => track.stop());
     setIsRecording(false);
     setIsMuted(false);
     onCallEnd?.();
   };
 
   const toggleMute = () => {
-    if (streamRef.current) {
-      streamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = !track.enabled;
-      });
-      setIsMuted((prev) => !prev);
+    setIsMuted(prev => !prev);
+    if (isMuted) {
+      // SpeechRecognition.startListening({ 
+      //   continuous: true,
+      //   language: 'en-US'
+      // });
+    } else {
+      //SpeechRecognition.stopListening();
     }
   };
 
+  if (!browserSupportsSpeechRecognition) {
+    return (
+      <div className="text-red-500">
+        Your browser doesn't support speech recognition. Please use Chrome or Edge.
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center space-y-2">
+    <div className="flex flex-col items-center space-y-4">
       <div className="flex items-center space-x-2">
         {isRecording && (
           <button
@@ -149,8 +161,16 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
           {isRecording ? <PhoneOff size={20} /> : <Phone size={20} />}
         </button>
       </div>
+      
       <div className="text-xs text-gray-500">
-        Status: {connectionStatus}
+        Status: {connectionStatus} | 
+        Speech Recognition: {isSpeechRecognitionActive ? 'Active' : 'Inactive'} |
+        {isMuted ? ' Muted' : ' Unmuted'}
+      </div>
+      
+      <div className="w-full max-w-md p-4 rounded-lg bg-blue-50">
+        <h3 className="mb-2 text-sm font-medium">Live Transcription</h3>
+        <p className="text-sm">{transcript || 'Waiting for speech...'}</p>
       </div>
     </div>
   );

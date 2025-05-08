@@ -8,6 +8,7 @@ import OpenAI from 'openai';
 import { ElevenLabsClient } from "elevenlabs";
 import * as fs from 'fs';
 import * as path from 'path';
+import { ConfigService } from '@nestjs/config';
 
 const formatMessage = (message: Message) => {
   return `${message.role === "user" ? "Human" : "Assistant"}: ${
@@ -18,9 +19,14 @@ const formatMessage = (message: Message) => {
 @Injectable()
 export class ChatService {
   constructor(
-    private readonly sttClient: OpenAI,
-    private readonly ttsClient: ElevenLabsClient,
-  ) {}
+    private readonly ttsClient : ElevenLabsClient,  
+    private configService: ConfigService
+  ) {
+    console.log(this.configService.get<string>('ELEVENLABS_API_KEY'))
+    this.ttsClient = new ElevenLabsClient({
+      apiKey: this.configService.get<string>('ELEVENLABS_API_KEY'),
+    });
+  }
 
   async askClone(messages: Message[] , res : Response) {
       console.log("Messages ", messages);
@@ -68,70 +74,19 @@ export class ChatService {
     
   }
 
-  async handleAudioData(socket: Socket, audioData: Buffer): Promise<void> {
+  async handleAudioData(socket: Socket, text: string): Promise<void> {
     try {
-      // Save the audio data temporarily
-      const tempDir = path.join(process.cwd(), 'temp');
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-      }
-      const tempFilePath = path.join(tempDir, 'audio.webm');
-      fs.writeFileSync(tempFilePath, audioData);
-
-      const text = await this.speechToText(tempFilePath);
-      console.log(`Transcribed text: ${text}`);
-      
-      // Get response from the language model
       const textStream = await callChain({ 
         question: text, 
         chatHistory: '' 
       });
-
-      // Process the text stream
+      console.log(textStream.body)
       const responseText = await this.processTextStream(textStream.body);
-      console.log('Response text:', responseText);
-      
-      // Convert the response to audio
       const responseAudio = await this.textToSpeech(responseText);
-      
-      // Clean up temporary file
-      fs.unlinkSync(tempFilePath);
-      
-      // Send the audio back to the client
-      socket.emit('audio-data', responseAudio);
-    
+      socket.emit('audio-response', responseAudio);
     } catch (error) {
       console.error('Error processing audio:', error);
       socket.emit('error', 'An error occurred while processing the audio');
-    }
-  }
-
-  private async speechToText(audioFilePath: string): Promise<string> {
-    try {
-      // Verify file exists
-    if (!fs.existsSync(audioFilePath)) {
-      throw new Error('Audio file does not exist');
-    }
-
-    // Get file stats to verify it's not empty
-    const stats = fs.statSync(audioFilePath);
-    if (stats.size === 0) {
-      throw new Error('Audio file is empty');
-    }
-
-    // Create read stream with explicit content type if needed
-    const fileStream = fs.createReadStream(audioFilePath);
-    
-    const transcription = await this.sttClient.audio.transcriptions.create({
-      file: fileStream,
-      model: 'whisper-1',
-      language: 'en', // optional: specify if you know the language
-      response_format: 'text', // or 'json', 'srt', etc.
-    });
-      return transcription;
-    } catch (error) {
-      console.error('Speech to text error:', error);
-      throw error;
     }
   }
 
@@ -142,13 +97,8 @@ export class ChatService {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      
       let chunk = new TextDecoder().decode(value);
-      
-      // Step 1: Remove "0\", "1\", etc., and trailing quotes/newlines
       chunk = chunk.replace(/^"\d+\\"|"$/g, '').trim();
-      
-      // Step 2: Try parsing as JSON
       try {
         const jsonData = JSON.parse(chunk);
         if (jsonData.text) {
@@ -168,11 +118,15 @@ export class ChatService {
 
   private async textToSpeech(text: string): Promise<Buffer> {
     try {
-      const audio = await this.ttsClient.generate({
-        text: text,
-        output_format: "mp3_44100_128",
-        model_id: "eleven_multilingual_v2"
-      });
+      const elevenlabs = new ElevenLabsClient({
+        apiKey: `${this.configService.get<string>('ELEVENLABS_API_KEY')}`, // Defaults to process.env.ELEVENLABS_API_KEY
+    });
+    
+    const audio = await elevenlabs.textToSpeech.convert('JBFqnCBsd6RMkjVDRZzb',{
+      output_format: "mp3_44100_128",
+    text: "The first move is what sets everything in motion.",
+    model_id: "eleven_multilingual_v2"
+    });
       
       const audioChunks: Buffer[] = [];
       for await (const chunk of audio) {

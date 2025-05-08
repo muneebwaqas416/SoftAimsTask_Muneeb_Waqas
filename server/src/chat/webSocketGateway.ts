@@ -23,8 +23,10 @@ export class AudioGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Audio client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('audio-message')
-  async handleAudioMessage(client: Socket, audioData: Buffer) {
-    await this.chatService.handleAudioData(client, audioData);
+  @SubscribeMessage('speech-text')
+  async handleAudioMessage(client: Socket, payload: { text: string, timestamp: number }) {
+    console.log(`Received speech text: ${payload.text}`);
+    let text : string = payload.text;
+    await this.chatService.handleAudioData(client, text);
   }
 }
