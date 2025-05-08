@@ -58,18 +58,14 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
 
     socket.on("audio-response", async (audioData: ArrayBuffer) => {
       try {
-        if (!audioContextRef.current) {
-          audioContextRef.current = new AudioContext();
-        }
-        const audioBuffer = await audioContextRef.current.decodeAudioData(audioData);
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContextRef.current.destination);
-        source.start();
+        const blob = new Blob([audioData], { type: "audio/mpeg" }); // or audio/wav if WAV
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
       } catch (err) {
         console.error("Error playing audio response:", err);
       }
-    });
+    });    
 
     return () => {
       socket.disconnect();
