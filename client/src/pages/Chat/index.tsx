@@ -140,7 +140,7 @@ export default function Chat() {
     async function verifyAuth() {
       const token: string | undefined = fetchCookieToken();
       console.log(token)
-      if(token){
+      if(token && token!=undefined){
         const res = await clientApiFetch("http://localhost:3000/api/profile", {
           method: 'GET',
           headers: {
@@ -152,13 +152,16 @@ export default function Chat() {
           deleteCookies();
           navigate('/login');
         } 
+      }else{
+        deleteCookies();
+          navigate('/login');
       }
       
       //navigate('/chat')
     }
 
     verifyAuth();
-  });
+  },[]);
 
   const {
     messages,
