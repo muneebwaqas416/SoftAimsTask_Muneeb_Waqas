@@ -9,15 +9,18 @@ function AppPage() {
   const navigate = useNavigate();
   useEffect(() => {
     async function init(){
-      const res = await clientApiFetch("http://localhost:3000/api/profile", {
+      const token : string | undefined = fetchCookieToken();
+      if(token){
+        const res = await clientApiFetch("http://localhost:3000/api/profile", {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${fetchCookieToken()}`
+          Authorization: `Bearer ${token}`
         }
-      })
-      if(res.error){
-        deleteCookies();
-        navigate('/login');
+        })
+        if(res.error){
+          deleteCookies();
+          navigate('/login');
+        }
       }
     }
 
@@ -34,7 +37,7 @@ function AppPage() {
       <div className="sticky top-0 z-40 w-full shadow-md backdrop-blur">
         <div className="py-4 mx-4 border-b border-slate-900/10 lg:px-8 lg:border-0 dark:border-slate-300/10 lg:mx-0">
           <div className="relative flex items-center justify-between">
-            <div className="font-medium">Eg App</div>
+            <div className="font-medium">Welcome to the chat application of Brack obama</div>
             <div className="flex">
               <p>{fetchFromCookie('username')}</p>
               <LogOut className="w-5 ml-4 cursor-pointer" onClick={logOut}/>

@@ -157,17 +157,6 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
           {isRecording ? <PhoneOff size={20} /> : <Phone size={20} />}
         </button>
       </div>
-      
-      <div className="text-xs text-gray-500">
-        Status: {connectionStatus} | 
-        Speech Recognition: {isSpeechRecognitionActive ? 'Active' : 'Inactive'} |
-        {isMuted ? ' Muted' : ' Unmuted'}
-      </div>
-      
-      <div className="w-full max-w-md p-4 rounded-lg bg-blue-50">
-        <h3 className="mb-2 text-sm font-medium">Live Transcription</h3>
-        <p className="text-sm">{transcript || 'Waiting for speech...'}</p>
-      </div>
     </div>
   );
 };

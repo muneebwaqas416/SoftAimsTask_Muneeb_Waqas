@@ -35,7 +35,7 @@ function RegisterForm() {
       if (!res.error) {
         storeTokenInCookie(res.data.access_token);
         storeInCookie('username', res.data.username);
-        navigate('/app');
+        navigate('/chat');
       }
       else {
         setApiError(res.message);

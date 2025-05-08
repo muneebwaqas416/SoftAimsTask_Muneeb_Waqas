@@ -29,7 +29,7 @@ function LoginForm() {
       if (!res.error) {
         storeTokenInCookie(res.data.access_token);
         storeInCookie('username', res.data.username);
-        navigate('/app');
+        navigate('/chat');
       }
       else {
         setApiError(res.message);
@@ -39,7 +39,7 @@ function LoginForm() {
   }
 
   return (
-    <form className='mt-10 grid grid-cols-1 gap-y-8'>
+    <form className='grid grid-cols-1 mt-10 gap-y-8'>
       <div className="grid w-full max-w-sm items-center gap-1.5">
         <Label htmlFor="email">Email</Label>
         <Input type="email" id="email" placeholder="Email" required onChange={(e) => setEmail(e.target.value)} />
@@ -51,7 +51,7 @@ function LoginForm() {
       </div>
 
       <EgButton onClick={formSubmit} isLoading={isLoading} type="submit">Sign In</EgButton>
-      <p className="text-red-500 text-sm">{apiError}</p>
+      <p className="text-sm text-red-500">{apiError}</p>
     </form>
   )
 }
