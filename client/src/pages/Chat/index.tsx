@@ -18,7 +18,7 @@ export default function Chat() {
       const token: string | undefined = fetchCookieToken();
       console.log(token)
       if(token && token!=undefined){
-        const res = await clientApiFetch("http://localhost:3000/api/profile", {
+        const res = await clientApiFetch(`${import.meta.env.VITE_NESTJS_BACKEND_URL}api/profile`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`
