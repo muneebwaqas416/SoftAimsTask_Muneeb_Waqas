@@ -99,7 +99,7 @@ export class ChatService {
       const { done, value } = await reader.read();
       if (done) break;
       let chunk = new TextDecoder().decode(value);
-      chunk = chunk.replace(/^"\d+\\"|"$/g, '').trim();        // Remove `d{...}` wrappers;
+      chunk = chunk.trim();        // Remove `d{...}` wrappers;
       try {
         const jsonData = JSON.parse(chunk);
         if (jsonData.text) {
@@ -108,7 +108,6 @@ export class ChatService {
       } catch (e) {
         // Step 3: If not JSON, clean and add raw text
         const cleanedChunk = chunk
-  .replace(/\{[^{}]*\}/g, '')             // Remove JSON-like content
   .replace(/f\{[^{}]*\}/g, '')            // Remove `f{...}` wrappers
   .replace(/e\{[^{}]*\}/g, '')            // Remove `e{...}` wrappers
   .replace(/d\{[^{}]*\}/g, '')            // Remove `d{...}` wrappers

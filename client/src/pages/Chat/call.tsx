@@ -12,7 +12,6 @@ interface AudioCallComponentProps {
 }
 
 const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
-  callStatus,
   onCallStart,
   onCallEnd,
 }) => {
@@ -22,10 +21,7 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
   const socketRef = useRef<Socket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   
-  // Speech recognition hooks
   const {
-    transcript,
-    listening: isSpeechRecognitionActive,
     resetTranscript,
     browserSupportsSpeechRecognition,
     finalTranscript,
@@ -104,7 +100,7 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
 
   const stopCall = () => {
     // Stop speech recognition
-    //SpeechRecognition.stopListening();
+    SpeechRecognition.stopListening();
     resetTranscript();
     
     setIsRecording(false);
@@ -115,12 +111,12 @@ const AudioCallComponent: React.FC<AudioCallComponentProps> = ({
   const toggleMute = () => {
     setIsMuted(prev => !prev);
     if (isMuted) {
-      // SpeechRecognition.startListening({ 
-      //   continuous: true,
-      //   language: 'en-US'
-      // });
+      SpeechRecognition.startListening({ 
+        continuous: true,
+        language: 'en-US'
+      });
     } else {
-      //SpeechRecognition.stopListening();
+      SpeechRecognition.stopListening();
     }
   };
 
