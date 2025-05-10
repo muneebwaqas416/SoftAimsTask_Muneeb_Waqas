@@ -21,7 +21,7 @@ This is the backend service for the AI-powered Influencer Clone Platform. It is 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-repo/eg-app-server.git
+git clone https://github.com/muneebwaqas416/SoftAimsTask_Muneeb_Waqas
 cd server
 
 npm install
