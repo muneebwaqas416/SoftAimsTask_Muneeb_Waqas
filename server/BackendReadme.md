@@ -22,17 +22,34 @@ This is the backend service for the AI-powered Influencer Clone Platform. It is 
 
 ```bash
 git clone https://github.com/your-repo/eg-app-server.git
-cd eg-app-server
+cd server
 
 npm install
 
+# Server
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/eg-app
+
+# MongoDB
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority&appName=<app-name>
+
+# JWT
 JWT_SECRET=your_jwt_secret
-OPENAI_API_KEY=your_openai_key
-PINECONE_API_KEY=your_pinecone_key
-PINECONE_ENVIRONMENT=your_pinecone_env
-ELEVENLABS_API_KEY=your_elevenlabs_key
+
+# OpenAI
+OPENAI_API_KEY=sk-...
+
+# Pinecone
+PINECONE_API_KEY=pcsk_...
+PINECONE_ENVIRONMENT=us-east-1
+PINECONE_INDEX_NAME=text-embedding-ada-002
+
+# ElevenLabs
+ELEVENLABS_API_KEY=sk_...
+
+# File Ingestion
+PDF_PATH=/absolute/path/to/your/document.pdf
+INDEX_INIT_TIMEOUT=500000
+
 
 npm run prepare:data
 
