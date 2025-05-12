@@ -19,7 +19,7 @@ function LoginForm() {
     setApiError(undefined);
     if (email && email.length > 0 && password && password.length > 0) {
       setIsLoading(true);
-      const res = await clientApiFetch("http://localhost:3000/api/signin", {
+      const res = await clientApiFetch(`${import.meta.env.VITE_NESTJS_BACKEND_URL}api/signin`, {
         method: 'POST',
         body: {
           email: email,

@@ -24,7 +24,7 @@ function RegisterForm() {
     setApiError(undefined);
     if (name && name.length > 0 && email && email.length > 0 && password && checkValidPassword(password)) {
       setIsLoading(true);
-      const res = await clientApiFetch("http://localhost:3000/api/signup", {
+      const res = await clientApiFetch(`${import.meta.env.VITE_NESTJS_BACKEND_URL}api/signup`, {
         method: 'POST',
         body: {
           name: name,
@@ -48,7 +48,7 @@ function RegisterForm() {
   }
 
   return (
-    <form className='mt-10 grid grid-cols-1 gap-y-8'>
+    <form className='grid grid-cols-1 mt-10 gap-y-8'>
       <div className="grid w-full max-w-sm items-center gap-1.5">
         <Label htmlFor="name">Name</Label>
         <Input type="text" id="name" required onChange={(e) => setName(e.target.value)} />
@@ -69,13 +69,13 @@ function RegisterForm() {
           setPassword(e.target.value)
         }} required />
         {
-          !passwordValid && <p className="text-red-500 text-sm">Incorrect Password format.<br />Please enter the password in the proper format</p>
+          !passwordValid && <p className="text-sm text-red-500">Incorrect Password format.<br />Please enter the password in the proper format</p>
         }
       </div>
 
       <EgButton onClick={formSubmit} isLoading={isLoading} type="submit">Register</EgButton>
 
-      <p className="text-red-500 text-sm">{apiError}</p>
+      <p className="text-sm text-red-500">{apiError}</p>
 
     </form>
   )
